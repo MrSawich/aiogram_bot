@@ -5,8 +5,8 @@ from app.handlers import router as handlers_router
 from app.admin import router as admin_router
 from dotenv import load_dotenv
 import os
-
 load_dotenv()
+
 API_TOKEN = os.getenv('BOT_API_TOKEN')
 
 if not API_TOKEN:
