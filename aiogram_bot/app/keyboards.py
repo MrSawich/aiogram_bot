@@ -11,6 +11,7 @@ start = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Начать игр�
 admin = ReplyKeyboardMarkup(keyboard=[
                 [KeyboardButton(text="Запустить игру"),
                  KeyboardButton(text="Загрузить сюжет"),
+                 KeyboardButton(text="Сгенерировать изображения"),
                  KeyboardButton(text="Правила загрузки")]],
                  resize_keyboard=True)
 
