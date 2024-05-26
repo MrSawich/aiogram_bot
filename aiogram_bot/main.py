@@ -6,10 +6,7 @@ from app.admin import router as admin_router
 from dotenv import load_dotenv
 import os
 
-# Загрузка переменных из .env файла
 load_dotenv()
-
-# Получение API токена из переменных окружения
 API_TOKEN = os.getenv('BOT_API_TOKEN')
 
 if not API_TOKEN:
@@ -18,8 +15,6 @@ if not API_TOKEN:
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
-
-# Включение роутеров
 dp.include_router(handlers_router)
 dp.include_router(admin_router)
 

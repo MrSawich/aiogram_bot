@@ -5,10 +5,7 @@ from aiogram.filters import Command
 from dotenv import load_dotenv
 import app.keyboards as kb
 
-# Загрузка переменных из .env файла
 load_dotenv()
-
-# Получение списка администраторов
 ADMIN_IDS = list(map(int, os.getenv('ADMIN_IDS').split(',')))
 
 router = Router()
@@ -40,8 +37,6 @@ async def handle_txt_file(message: types.Message):
 
     file_info = await message.bot.get_file(document.file_id)
     downloaded_file = await message.bot.download_file(file_info.file_path)
-
-    # Чтение содержимого файла
     content = downloaded_file.getvalue().decode('utf-8').splitlines()
 
     if len(content) < 3:
@@ -49,8 +44,6 @@ async def handle_txt_file(message: types.Message):
         return
 
     query1, query2, storyline = content[0], content[1], content[2]
-
-    # Сохранение текста в папку story
     if not os.path.exists('story'):
         os.makedirs('story')
 
