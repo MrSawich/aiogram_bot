@@ -9,9 +9,9 @@ main = ReplyKeyboardMarkup(keyboard=[
 start = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="Начать игру"),]], resize_keyboard=True, one_time_keyboard=True)
 
 admin = ReplyKeyboardMarkup(keyboard=[
-                [KeyboardButton(text="Запустить игру"),
-                 KeyboardButton(text="Загрузить сюжет"),
+                [KeyboardButton(text="Загрузить сюжет"),
                  KeyboardButton(text="Сгенерировать изображения"),
+                 KeyboardButton(text="Удалить изображения"),
                  KeyboardButton(text="Правила загрузки")]],
                  resize_keyboard=True)
 

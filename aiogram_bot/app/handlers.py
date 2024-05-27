@@ -6,16 +6,17 @@ from aiogram.filters import CommandStart, Command
 import app.keyboards as kb
 
 router = Router()
-actors = dict()
+actors = {}
 
 def get_user_stats(user_id):
     return actors.get(user_id, ["", 0, 0, 0])
 
 def update_user_stats(user_id, money_delta=0, energy_delta=0, points_delta=0):
     if user_id in actors:
-        actors[user_id][1] += money_delta
-        actors[user_id][2] += energy_delta
-        actors[user_id][3] += points_delta
+        stats = actors[user_id]
+        stats[1] += money_delta
+        stats[2] += energy_delta
+        stats[3] += points_delta
     else:
         actors[user_id] = ["", money_delta, energy_delta, points_delta]
 
@@ -25,13 +26,14 @@ def read_file(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         return file.read()
 
-def get_random_image_from_etap(etap_number):
+def get_random_image_from_etap(etap_number, prefix):
     photo_dir = f"photo/Etap {etap_number}"
-    if not os.path.exists(photo_dir):
-        raise FileNotFoundError(f"Directory not found: {photo_dir}")
-    images = [img for img in os.listdir(photo_dir) if img.endswith(".jpg")]
+    if etap_number == "final":
+        images = [img for img in os.listdir(photo_dir) if img.endswith(".jpg")]
+    else:
+        images = [img for img in os.listdir(photo_dir) if img.startswith(prefix) and img.endswith(".jpg")]
     if not images:
-        raise FileNotFoundError(f"No images found in the 'Etap {etap_number}' directory.")
+        raise FileNotFoundError(f"No images found in the 'Etap {etap_number}' directory with prefix '{prefix}'.")
     return os.path.join(photo_dir, random.choice(images))
 
 async def send_message_and_photo(message, text, photo_path, reply_markup=None):
@@ -79,12 +81,12 @@ async def rule(message: Message):
     rule_txt = read_file("text/rule.txt")
     await message.answer(rule_txt, reply_markup=kb.start)
 
-async def handle_choice(callback: CallbackQuery, file_path, money_delta=0, energy_delta=0, points_delta=0, next_markup=None, etap_number=None):
+async def handle_choice(callback: CallbackQuery, file_path, money_delta=0, energy_delta=0, points_delta=0, next_markup=None, etap_number=None, prefix=None):
     user_id = callback.message.chat.id
     update_user_stats(user_id, money_delta, energy_delta, points_delta)
     stats = get_user_stats(user_id)
     etap_txt = read_file(file_path)
-    image_path = get_random_image_from_etap(etap_number)
+    image_path = get_random_image_from_etap(etap_number, prefix)
     await callback.message.answer(etap_txt)
     await callback.message.answer_photo(FSInputFile(image_path))
     await callback.message.answer(
@@ -95,74 +97,63 @@ async def handle_choice(callback: CallbackQuery, file_path, money_delta=0, energ
 
 @router.callback_query(F.data == "ch1")
 async def ch1(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer1.txt", energy_delta=+1, next_markup=kb.game_2, etap_number=1)
+    await handle_choice(callback, "text/answer1.txt", energy_delta=+1, next_markup=kb.game_2, etap_number=1, prefix="v1_1")
 
 @router.callback_query(F.data == "ch2")
 async def ch2(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer2.txt", energy_delta=-1, points_delta=10, next_markup=kb.game_2, etap_number=1)
+    await handle_choice(callback, "text/answer2.txt", energy_delta=-1, points_delta=10, next_markup=kb.game_2, etap_number=1, prefix="v2_1")
 
 @router.callback_query(F.data == "ch3")
 async def ch3(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer3.txt", money_delta=-500, next_markup=kb.game_3, etap_number=2)
+    await handle_choice(callback, "text/answer3.txt", money_delta=-500, next_markup=kb.game_3, etap_number=2, prefix="v1_2")
 
 @router.callback_query(F.data == "ch4")
 async def ch4(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer4.txt", energy_delta=-1, points_delta=10, next_markup=kb.game_3, etap_number=2)
+    await handle_choice(callback, "text/answer4.txt", energy_delta=-1, points_delta=10, next_markup=kb.game_3, etap_number=2, prefix="v2_2")
 
 @router.callback_query(F.data == "ch5")
 async def ch5(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer5.txt", money_delta=150, energy_delta=-1, points_delta=10, next_markup=kb.game_4, etap_number=3)
+    await handle_choice(callback, "text/answer5.txt", money_delta=150, energy_delta=-1, points_delta=10, next_markup=kb.game_4, etap_number=3, prefix="v1_3")
 
 @router.callback_query(F.data == "ch6")
 async def ch6(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer6.txt", money_delta=-300, next_markup=kb.game_4, etap_number=3)
+    await handle_choice(callback, "text/answer6.txt", money_delta=-300, next_markup=kb.game_4, etap_number=3, prefix="v2_3")
 
 @router.callback_query(F.data == "ch7")
 async def ch7(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer7.txt", energy_delta=-1, points_delta=20, next_markup=kb.game_5, etap_number=4)
+    await handle_choice(callback, "text/answer7.txt", energy_delta=-1, points_delta=20, next_markup=kb.game_5, etap_number=4, prefix="v1_4")
 
 @router.callback_query(F.data == "ch8")
 async def ch8(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer8.txt", money_delta=-200, energy_delta=1, points_delta=5, next_markup=kb.game_5, etap_number=4)
+    await handle_choice(callback, "text/answer8.txt", money_delta=-200, energy_delta=1, points_delta=5, next_markup=kb.game_5, etap_number=4, prefix="v2_4")
 
 @router.callback_query(F.data == "ch9")
 async def ch9(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer9.txt", energy_delta=-2, points_delta=20, next_markup=kb.final, etap_number=5)
+    await handle_choice(callback, "text/answer9.txt", energy_delta=-2, points_delta=20, next_markup=kb.final, etap_number=5, prefix="v1_5")
 
 @router.callback_query(F.data == "ch10")
 async def ch10(callback: CallbackQuery):
-    await handle_choice(callback, "text/answer10.txt", money_delta=-400, energy_delta=1, points_delta=-10, next_markup=kb.final, etap_number=5)
+    await handle_choice(callback, "text/answer10.txt", money_delta=-400, energy_delta=1, points_delta=-10, next_markup=kb.final, etap_number=5, prefix="v2_5")
 
 @router.callback_query(F.data.startswith("game_"))
 async def game(callback: CallbackQuery):
     stage_number = callback.data.split("_")[-1]
-    etap_txt_path = f"story/etap{stage_number}.txt"
-    if os.path.exists(etap_txt_path):
-        with open(etap_txt_path, "r", encoding="utf-8") as file:
-            lines = file.readlines()
-            if len(lines) >= 3:
-                etap_txt = lines[2]
-            else:
-                etap_txt = "Сюжет не найден."
-    else:
-        etap_txt = "Файл сюжета не найден."
-    await callback.message.answer(etap_txt)
-    await callback.message.answer_photo(FSInputFile(f"photo/etap{stage_number}.png"), reply_markup=kb.__dict__[f"choice{stage_number}"])
+    etap_txt = read_file(f"story/etap{stage_number}.txt").splitlines()[2]
+    await send_message_and_photo(callback.message, etap_txt, f"photo/etap{stage_number}.png", kb.__dict__[f"choice{stage_number}"])
 
 @router.callback_query(F.data == "final")
 async def final(callback: CallbackQuery):
     user_id = callback.message.chat.id
     stats = get_user_stats(user_id)
     ending = determine_ending(stats)
-    await callback.message.answer(ending)
-    await callback.message.answer_photo(FSInputFile(get_random_image_from_etap("final")))
+    photo_path = get_random_image_from_etap("final", "")
+    await send_message_and_photo(callback.message, ending, photo_path)
 
 def determine_ending(stats):
     points, energy, money = stats[3], stats[2], stats[1]
     if points >= 80:
-        file_path = "text/ending1.txt"
+        return read_file("text/ending1.txt")
     elif 60 <= points < 80:
-        file_path = "text/ending2.txt"
-    elif points < 60:
-        file_path = "text/ending3.txt"
-    return read_file(file_path)
+        return read_file("text/ending2.txt")
+    else:
+        return read_file("text/ending3.txt")
