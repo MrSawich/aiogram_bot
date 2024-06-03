@@ -9,16 +9,17 @@ router = Router()
 actors = {}
 
 def get_user_stats(user_id):
-    return actors.get(user_id, ["", 0, 0, 0])
+    if user_id not in actors:
+        actors[user_id] = ["", 1000, 10, 0]  # Инициализация по умолчанию
+    return actors[user_id]
 
 def update_user_stats(user_id, money_delta=0, energy_delta=0, points_delta=0):
-    if user_id in actors:
-        stats = actors[user_id]
-        stats[1] += money_delta
-        stats[2] += energy_delta
-        stats[3] += points_delta
-    else:
-        actors[user_id] = ["", money_delta, energy_delta, points_delta]
+    if user_id not in actors:
+        actors[user_id] = ["", 1000, 10, 0]
+    stats = actors[user_id]
+    stats[1] += money_delta
+    stats[2] += energy_delta
+    stats[3] += points_delta
 
 def read_file(file_path):
     if not os.path.exists(file_path):
@@ -28,10 +29,9 @@ def read_file(file_path):
 
 def get_random_image_from_etap(etap_number, prefix):
     photo_dir = f"photo/Etap {etap_number}"
-    if etap_number == "final":
-        images = [img for img in os.listdir(photo_dir) if img.endswith(".jpg")]
-    else:
-        images = [img for img in os.listdir(photo_dir) if img.startswith(prefix) and img.endswith(".jpg")]
+    if not os.path.exists(photo_dir):
+        raise FileNotFoundError(f"Directory not found: {photo_dir}")
+    images = [img for img in os.listdir(photo_dir) if img.startswith(prefix) and img.endswith(".jpg")]
     if not images:
         raise FileNotFoundError(f"No images found in the 'Etap {etap_number}' directory with prefix '{prefix}'.")
     return os.path.join(photo_dir, random.choice(images))
@@ -146,8 +146,7 @@ async def final(callback: CallbackQuery):
     user_id = callback.message.chat.id
     stats = get_user_stats(user_id)
     ending = determine_ending(stats)
-    photo_path = get_random_image_from_etap("final", "")
-    await send_message_and_photo(callback.message, ending, photo_path)
+    await send_message_and_photo(callback.message, ending, get_random_image_from_etap("final", ""))
 
 def determine_ending(stats):
     points, energy, money = stats[3], stats[2], stats[1]
